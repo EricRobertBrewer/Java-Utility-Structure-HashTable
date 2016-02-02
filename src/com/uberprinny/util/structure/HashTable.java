@@ -46,9 +46,9 @@ public class HashTable<K, V> implements Map<K, V> {
 	
 	private static final int HASH = 107; // prime
 	
-	private LinkedList<Entry<K, V>>[] mTray;
+	private V mNull = null;
 	
-	// TODO Add V mNullKey;, modify getSize()
+	private LinkedList<Entry<K, V>>[] mTray;
 	
 	private int mSize = 0;
 	
@@ -62,6 +62,7 @@ public class HashTable<K, V> implements Map<K, V> {
 	
 	@Override
 	public void clear() {
+		mNull = null;
 		for (int i = 0; i < HASH; i++) {
 			mTray[i] = null;
 		}
@@ -70,6 +71,9 @@ public class HashTable<K, V> implements Map<K, V> {
 
 	@Override
 	public boolean containsKey(Object key) {
+		if (key == null) {
+			return mNull != null;
+		}
 		for (Entry<K, V> entry : getTray(key)) {
 			if (entry.getKey().equals(key)) {
 				return true;
@@ -80,6 +84,9 @@ public class HashTable<K, V> implements Map<K, V> {
 
 	@Override
 	public boolean containsValue(Object value) {
+		if (mNull != null && mNull.equals(value)) {
+			return true;
+		}
 		for (LinkedList<Entry<K, V>> tray : mTray) {
 			if (tray != null) {
 				for (Entry<K, V> entry : tray) {
@@ -95,6 +102,9 @@ public class HashTable<K, V> implements Map<K, V> {
 	@Override
 	public Set<Map.Entry<K, V>> entrySet() {
 		HashSet<Map.Entry<K, V>> s = new HashSet<Map.Entry<K, V>>();
+		if (mNull != null) {
+			s.add(new Entry<K, V>(null, mNull));
+		}
 		for (LinkedList<Entry<K, V>> tray : mTray) {
 			if (tray != null) {
 				for (Entry<K, V> entry : tray) {
@@ -107,6 +117,9 @@ public class HashTable<K, V> implements Map<K, V> {
 
 	@Override
 	public V get(Object key) {
+		if (key == null) {
+			return mNull;
+		}
 		for (Entry<K, V> entry : getTray(key)) {
 			if (entry.getKey().equals(key)) {
 				return entry.getValue();
@@ -117,7 +130,7 @@ public class HashTable<K, V> implements Map<K, V> {
 
 	@Override
 	public boolean isEmpty() {
-		return mSize == 0;
+		return mSize == 0 && mNull == null;
 	}
 
 	@Override
@@ -135,6 +148,11 @@ public class HashTable<K, V> implements Map<K, V> {
 
 	@Override
 	public V put(K key, V value) {
+		if (key == null) {
+			V old = mNull;
+			mNull = value;
+			return old;
+		}
 		LinkedList<Entry<K, V>> tray = getTray(key);
 		for (Entry<K, V> entry : tray) {
 			if (entry.getKey().equals(key)) { // maintains uniqueness of keys
@@ -155,6 +173,11 @@ public class HashTable<K, V> implements Map<K, V> {
 
 	@Override
 	public V remove(Object key) {
+		if (key == null) {
+			V old = mNull;
+			mNull = null;
+			return old;
+		}
 		LinkedList<Entry<K, V>> tray = getTray(key);
 		for (int i = 0; i < tray.size(); i++) {
 			Entry<K, V> entry = tray.get(i);
@@ -169,12 +192,15 @@ public class HashTable<K, V> implements Map<K, V> {
 
 	@Override
 	public int size() {
-		return mSize;
+		return mSize + (mNull != null ? 1 : 0);
 	}
 
 	@Override
 	public Collection<V> values() {
 		ArrayList<V> values = new ArrayList<V>();
+		if (mNull != null) {
+			values.add(mNull);
+		}
 		for (LinkedList<Entry<K, V>> tray : mTray) {
 			if (tray != null) {
 				for (Entry<K, V> entry : tray) {
